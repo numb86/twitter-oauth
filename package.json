@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/numb86/twitter-oauth#readme",
   "devDependencies": {
+    "dotenv": "^4.0.0",
     "eslint": "^3.16.1",
     "eslint-config-airbnb": "^14.1.0",
     "eslint-plugin-import": "^2.2.0",
