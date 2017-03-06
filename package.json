@@ -5,6 +5,7 @@
   "main": "authenticate.js",
   "scripts": {
     "test": "jest && eslint __tests__",
+    "manual-test": "node manual_tests/accessToken.js",
     "lint": "eslint src"
   },
   "repository": {
