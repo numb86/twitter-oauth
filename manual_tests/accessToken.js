@@ -24,6 +24,25 @@ function createRootHtml(requestToken) {
 </html>
 `;
 }
+function createCallbackHtml() {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>manual test</title>
+</head>
+<body>
+  <p>PATH</p>
+  <p>
+  </p>
+  <p>クッキーは消した旨</p>
+  <script>
+    document.cookie = 'oauth_token_secret=; max-age=0';
+  </script>
+</body>
+</html>
+`;
+}
 
 // requestの結果をPromiseオブジェクトにするための関数
 function wrapRequest(options) {
@@ -50,28 +69,53 @@ const {
 } = process.env;
 
 function resCallbackPage(req, res) {
-  res.writeHead(200);
-  res.write('callbakc page');
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.write(createCallbackHtml());
   res.end();
 }
 
+
 function resStartPage(req, res) {
-  console.log(1);
   getSignPromise('request', { envApiKey, envApiSecret, envUrl })
+    .then(result => wrapRequest({ url: result[0], headers: result[1] }))
     .then((result) => {
-      request.post({ url: result[0], headers: result[1] }, (error, response) => {
-        console.log(3);
-        if (error) {
-          return res.end();
-        }
-        const tokens = querystring.parse(response.body);
-        res.writeHead(200);
-        res.write(createRootHtml(tokens.oauth_token));
+      if (result.statusCode !== 200) {
+        res.writeHead(400);
+        res.write('error');
         return res.end();
+      }
+      const tokens = querystring.parse(result.body);
+      res.writeHead(200, {
+        'Content-Type': 'text/html',
+        'Set-Cookie': [cookie.serialize('oauth_token_secret', tokens.oauth_token_secret, { maxAge: 180 })],
       });
+      res.write(createRootHtml(tokens.oauth_token));
+      return res.end();
     })
-    .catch(result => result);
+    .catch((result) => { res.end(); return result; });
 }
+
+// function resStartPage(req, res) {
+//   getSignPromise('request', { envApiKey, envApiSecret, envUrl })
+//     .then((result) => {
+//       request.post({ url: result[0], headers: result[1] }, (error, response) => {
+//         if (error) {
+//           // console.log(error);
+//           return res.end();
+//         }
+//         const cookieObj = req.headers.cookie ? cookie.parse(req.headers.cookie) : null;
+//         console.log(cookieObj);
+//         const tokens = querystring.parse(response.body);
+//         res.writeHead(200, {
+//           'Content-Type': 'text/html',
+//           'Set-Cookie': [cookie.serialize('oauth_token_secret', tokens.oauth_token_secret, { maxAge: 180 })],
+//         });
+//         res.write(createRootHtml(tokens.oauth_token));
+//         return res.end();
+//       });
+//     })
+//     .catch(result => result);
+// }
 
 const server = http.createServer();
 server.on('request', (req, res) => {
