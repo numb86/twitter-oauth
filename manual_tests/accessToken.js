@@ -2,6 +2,7 @@ require('dotenv').config();
 const request = require('request');
 const cookie = require('cookie');
 const http = require('http');
+const url = require('url');
 const querystring = require('querystring');
 const authenticate = require('../src/authenticate');
 
@@ -15,16 +16,25 @@ function createRootHtml(requestToken) {
 <body>
   <p>access token signature</p>
   <p>
-    <a href="https://api.twitter.com/oauth/authenticate?oauth_token=${requestToken}">
+    <a href="https://api.twitter.com/oauth/authorize?oauth_token=${requestToken}">
       Go to the authentication page.
     </a>
   </p>
-  <p>コールバックの設定について案内</p>
+  <p>You need to set the CallbackUrl to http://127.0.0.1:3000.</p>
 </body>
 </html>
 `;
 }
-function createCallbackHtml() {
+function createCallbackHtml(isGreen, result) {
+  let heading = '';
+  let message = '';
+  if (isGreen) {
+    heading = '<p style="color: #33ff66;">PATH</p>';
+    message = `Authorized. Your account is ${result}.`;
+  } else {
+    heading = '<p style="color: red;">ERROR</p>';
+    message = `Error Message:<br>${result}`;
+  }
   return `
 <!DOCTYPE html>
 <html>
@@ -32,10 +42,10 @@ function createCallbackHtml() {
   <title>manual test</title>
 </head>
 <body>
-  <p>PATH</p>
-  <p>
-  </p>
-  <p>クッキーは消した旨</p>
+  ${heading}
+  <p>${message}</p>
+  <p>Cookies have already been deleted.</p>
+  <p><a href="http://127.0.0.1:3000">Try again.</a></p>
   <script>
     document.cookie = 'oauth_token_secret=; max-age=0';
   </script>
@@ -58,8 +68,23 @@ function getSignPromise(type, data) {
     return new Promise((resolve) => {
       resolve(authenticate.getRequestTokenSign(data.envApiKey, data.envApiSecret, data.envUrl));
     });
+  } else if (type === 'access') {
+    return new Promise((resolve) => {
+      resolve(authenticate.getAccessTokenSign(
+        data.envApiKey, data.envApiSecret,
+        data.requestTokenSecret, data.oauthToken, data.oauthVerifier
+      ));
+    });
   }
   return new Error('typeが不正です。wrapGetSign');
+}
+
+function getQueryPromise(currentUrl) {
+  return new Promise((resolve) => {
+    const query = url.parse(currentUrl).query;
+    const queries = querystring.parse(query);
+    resolve(queries);
+  });
 }
 
 const {
@@ -69,11 +94,39 @@ const {
 } = process.env;
 
 function resCallbackPage(req, res) {
-  res.writeHead(200, { 'Content-Type': 'text/html' });
-  res.write(createCallbackHtml());
-  res.end();
+  getQueryPromise(req.url)
+    .then((queries) => {
+      const cookieObj = req.headers.cookie ? cookie.parse(req.headers.cookie) : null;
+      const requestTokenSecret = cookieObj.oauth_token_secret;
+      const oauthToken = queries.oauth_token;
+      const oauthVerifier = queries.oauth_verifier;
+      if (requestTokenSecret && oauthToken && oauthVerifier) {
+        return { requestTokenSecret, oauthToken, oauthVerifier };
+      }
+      return new Error('not found tokens');
+    })
+    .then((tokens) => {
+      const { requestTokenSecret, oauthToken, oauthVerifier } = tokens;
+      return getSignPromise('access', { envApiKey, envApiSecret, requestTokenSecret, oauthToken, oauthVerifier });
+    })
+    .then(result => wrapRequest({ url: result[0], headers: result[1] }))
+    .then((result) => {
+      if (result.statusCode !== 200) {
+        res.writeHead(400);
+        res.write(createCallbackHtml(false, result.body));
+        return res.end();
+      }
+      const tokens = querystring.parse(result.body);
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.write(createCallbackHtml(true, tokens.screen_name));
+      return res.end();
+    })
+    .catch((result) => {
+      res.writeHead(400);
+      res.write(createCallbackHtml(false, result.body));
+      return res.end();
+    });
 }
-
 
 function resStartPage(req, res) {
   getSignPromise('request', { envApiKey, envApiSecret, envUrl })
@@ -95,32 +148,10 @@ function resStartPage(req, res) {
     .catch((result) => { res.end(); return result; });
 }
 
-// function resStartPage(req, res) {
-//   getSignPromise('request', { envApiKey, envApiSecret, envUrl })
-//     .then((result) => {
-//       request.post({ url: result[0], headers: result[1] }, (error, response) => {
-//         if (error) {
-//           // console.log(error);
-//           return res.end();
-//         }
-//         const cookieObj = req.headers.cookie ? cookie.parse(req.headers.cookie) : null;
-//         console.log(cookieObj);
-//         const tokens = querystring.parse(response.body);
-//         res.writeHead(200, {
-//           'Content-Type': 'text/html',
-//           'Set-Cookie': [cookie.serialize('oauth_token_secret', tokens.oauth_token_secret, { maxAge: 180 })],
-//         });
-//         res.write(createRootHtml(tokens.oauth_token));
-//         return res.end();
-//       });
-//     })
-//     .catch(result => result);
-// }
-
 const server = http.createServer();
 server.on('request', (req, res) => {
-  switch (req.url) {
-    case '/callback': {
+  switch (true) {
+    case /^\/callback?/.test(req.url): {
       resCallbackPage(req, res);
       break;
     }
@@ -131,24 +162,6 @@ server.on('request', (req, res) => {
   }
 });
 server.listen(3000);
-
-// const [requestUrl, headers] = authenticate.getRequestTokenSign(envApiKey, envApiSecret, envUrl);
-
-// wrapRequest({ url: requestUrl, headers })
-//   .then(result => querystring.parse(result.body))
-//   .then((tokens) => {
-//     server.on('request', (req, res) => {
-//       const cookieObj = req.headers.cookie ? cookie.parse(req.headers.cookie) : null;
-//       console.log(cookieObj);
-//       res.writeHead(200, {
-//         'Content-Type': 'text/html',
-//         'Set-Cookie': [cookie.serialize('oauth_token_secret', tokens.oauth_token_secret, { maxAge: 180 })],
-//       });
-//       res.write(createRootHtml(tokens.oauth_token));
-//       res.end();
-//     });
-//     server.listen(3000);
-//   });
 
 console.log('');
 console.log('You can execute manual test in http://127.0.0.1:3000');
