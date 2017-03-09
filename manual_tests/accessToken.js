@@ -21,6 +21,14 @@ function createRootHtml(requestToken) {
     </a>
   </p>
   <p>You need to set the CallbackUrl to http://127.0.0.1:3000.</p>
+  <p>You can set environment variable in <code>./.env</code></p>
+  <pre>
+  <code>
+NODE_API_KEY = hogehoge
+NODE_API_KEY_SECRET = fugafuga
+NODE_CALLBACK_URL = http://127.0.0.1:3000/callback
+  </code>
+  </pre>
 </body>
 </html>
 `;
@@ -76,7 +84,7 @@ function getSignPromise(type, data) {
       ));
     });
   }
-  return new Error('typeが不正です。wrapGetSign');
+  return new Error('type is uncorrect. wrapGetSign');
 }
 
 function getQueryPromise(currentUrl) {
