@@ -5,6 +5,7 @@
   "main": "authenticate.js",
   "scripts": {
     "test": "jest && eslint __tests__",
+    "manual-test": "node manual_tests/accessToken.js",
     "lint": "eslint src"
   },
   "repository": {
@@ -19,6 +20,7 @@
   },
   "homepage": "https://github.com/numb86/twitter-oauth#readme",
   "devDependencies": {
+    "cookie": "^0.3.1",
     "dotenv": "^4.0.0",
     "eslint": "^3.16.1",
     "eslint-config-airbnb": "^14.1.0",
