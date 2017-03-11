@@ -1,7 +1,7 @@
 {
   "name": "twitter-sign",
   "version": "1.0.0",
-  "description": "",
+  "description": "npm module for get the Twitter API tokens.",
   "main": "src/authenticate.js",
   "scripts": {
     "test": "jest && eslint __tests__",
@@ -18,7 +18,7 @@
   "bugs": {
     "url": "https://github.com/numb86/twitter-sign/issues"
   },
-  "homepage": "https://github.com/numb86/twitter-sign",
+  "homepage": "https://github.com/numb86/twitter-sign#readme",
   "devDependencies": {
     "cookie": "^0.3.1",
     "dotenv": "^4.0.0",
