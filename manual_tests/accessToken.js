@@ -37,10 +37,10 @@ function createCallbackHtml(isGreen, result) {
   let heading = '';
   let message = '';
   if (isGreen) {
-    heading = '<p style="color: #33ff66;">PATH</p>';
+    heading = '<span style="color: #000000; background-color: #33ff66;">PATH</span>';
     message = `Authorized. Your account is ${result}.`;
   } else {
-    heading = '<p style="color: red;">ERROR</p>';
+    heading = '<span style="color: #000000; background-color: red;">ERROR</span>';
     message = `Error Message:<br>${result}`;
   }
   return `
