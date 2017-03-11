@@ -49,7 +49,7 @@ function getRequestTokenSign(key, secret, callbackUrl) {
     Authorization: `OAuth ${buildHeaderParams(params)}`,
   };
 
-  return [requestUrl, headers];
+  return { requestUrl, headers };
 }
 
 function getAccessTokenSign(key, secret, requestTokenSecret, oauthToken, oauthVerifier) {
@@ -78,7 +78,7 @@ function getAccessTokenSign(key, secret, requestTokenSecret, oauthToken, oauthVe
     Authorization: `OAuth ${buildHeaderParams(params)}`,
   };
 
-  return [requestUrl, headers];
+  return { requestUrl, headers };
 }
 
 module.exports.getRequestTokenSign = getRequestTokenSign;

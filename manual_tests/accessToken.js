@@ -117,7 +117,7 @@ function resCallbackPage(req, res) {
       const { requestTokenSecret, oauthToken, oauthVerifier } = tokens;
       return getSignPromise('access', { envApiKey, envApiSecret, requestTokenSecret, oauthToken, oauthVerifier });
     })
-    .then(result => wrapRequest({ url: result[0], headers: result[1] }))
+    .then(result => wrapRequest({ url: result.requestUrl, headers: result.headers }))
     .then((result) => {
       if (result.statusCode !== 200) {
         res.writeHead(400);
@@ -138,7 +138,7 @@ function resCallbackPage(req, res) {
 
 function resStartPage(req, res) {
   getSignPromise('request', { envApiKey, envApiSecret, envUrl })
-    .then(result => wrapRequest({ url: result[0], headers: result[1] }))
+    .then(result => wrapRequest({ url: result.requestUrl, headers: result.headers }))
     .then((result) => {
       if (result.statusCode !== 200) {
         res.writeHead(400);
