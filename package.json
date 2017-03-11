@@ -1,8 +1,8 @@
 {
-  "name": "twitter-oauth",
+  "name": "twitter-sign",
   "version": "1.0.0",
   "description": "",
-  "main": "authenticate.js",
+  "main": "src/authenticate.js",
   "scripts": {
     "test": "jest && eslint __tests__",
     "manual-test": "node manual_tests/accessToken.js",
@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/numb86/twitter-oauth.git"
+    "url": "git+https://github.com/numb86/twitter-sign.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/numb86/twitter-oauth/issues"
+    "url": "https://github.com/numb86/twitter-sign/issues"
   },
-  "homepage": "https://github.com/numb86/twitter-oauth#readme",
+  "homepage": "https://github.com/numb86/twitter-sign",
   "devDependencies": {
     "cookie": "^0.3.1",
     "dotenv": "^4.0.0",
