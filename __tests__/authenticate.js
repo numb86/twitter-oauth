@@ -20,7 +20,8 @@ const {
 
 describe('connect api', () => {
   test('request token', () => {
-    const [requestUrl, headers] = authenticate.getRequestTokenSign(envApiKey, envApiSecret, envUrl);
+    const { requestUrl, headers }
+      = authenticate.getRequestTokenSign(envApiKey, envApiSecret, envUrl);
     return wrapRequest({ url: requestUrl, headers })
       .then((result) => {
         expect(result.statusCode).toBe(200);
