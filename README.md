@@ -1,3 +1,5 @@
+**:warning:This package is currently not maintained.:warning:**
+
 # twitter-sign
 
 You can easily get the Twitter API signature.
